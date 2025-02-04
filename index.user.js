@@ -7,6 +7,8 @@
 // @match        https://wingify.atlassian.net/jira*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=atlassian.net
 // @grant        none
+// @updateURL    https://github.com/sidrohravwo/Jira-Stats/blob/main/index.user.js
+// @downloadURL  https://github.com/sidrohravwo/Jira-Stats/blob/main/index.user.js
 // ==/UserScript==
 
 (function() {
