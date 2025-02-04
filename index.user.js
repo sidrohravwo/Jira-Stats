@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         New Userscript
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  try to take over the world!
 // @author       You
 // @match        https://wingify.atlassian.net/jira*
@@ -13,6 +13,7 @@
 
 (function() {
     'use strict';
+    console.log("New Version 1.1");
     async function getJiraTaskStats(projectKey, versionName, month, year) {
     try {
         const versionsResponse = await fetch(`/rest/api/3/project/${projectKey}/versions`);
