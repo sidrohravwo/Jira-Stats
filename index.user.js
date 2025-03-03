@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         New Userscript
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.3
 // @description  try to take over the world!
 // @author       You
 // @match        https://wingify.atlassian.net/jira*
@@ -13,7 +13,7 @@
 
 (function() {
     'use strict';
-    console.log("New Version 1.1");
+    console.log("New Version 1.3");
     async function getJiraTaskStats(projectKey, versionName, month, year) {
     try {
         const versionsResponse = await fetch(`/rest/api/3/project/${projectKey}/versions`);
@@ -26,7 +26,8 @@
         }
 
         const startOfMonth = `${year}-${month.toString().padStart(2, '0')}-01`;
-        const startOfNextMonth = `${year}-${(month + 1).toString().padStart(2, '0')}-01`;
+        let endDate = new Date(year, month, 0).getDate().toString().padStart(2, '0');
+        const startOfNextMonth = `${year}-${(month).toString().padStart(2, '0')}-${endDate}`;
         const maxResults = 100;
 
         let totalReleased = 0, totalCreated = 0, totalUniqueTasks = 0;
@@ -46,7 +47,7 @@
 
         releasedIssues.forEach(issue => {
             const status = issue.fields.status.name.toLowerCase();
-            if (status === "released" || status === "done") {
+            if (status === "released" || status === "done" || status === "completed") {
                 totalReleased++;
 
                 const assignee = issue.fields.assignee ? issue.fields.assignee.displayName : "Unassigned";
