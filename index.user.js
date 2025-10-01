@@ -10,7 +10,6 @@
 // @updateURL    https://github.com/sidrohravwo/Jira-Stats/raw/refs/heads/main/index.user.js
 // @downloadURL  https://github.com/sidrohravwo/Jira-Stats/raw/refs/heads/main/index.user.js
 // ==/UserScript==
-
 (function() {
     'use strict';
     console.log("New Version 1.3");
@@ -35,15 +34,17 @@
         let createdByReporter = {}, uniqueTasksByAssignee = {}, uniqueTasksByReporter = {};
 
         // Fetch Released Tasks (With Fix Version)
-        let startAt = 0, releasedIssues = [], searchResults;
+        let startAt = 0, releasedIssues = [], searchResults, nextPageToken, url;
         do {
             const jqlQuery = `fixVersion=${version.id} AND project=${projectKey}`;
-            const searchResponse = await fetch(`/rest/api/3/search?jql=${encodeURIComponent(jqlQuery)}&fields=status,assignee,reporter,created&startAt=${startAt}&maxResults=${maxResults}`);
+            url = `/rest/api/3/search/jql?jql=${encodeURIComponent(jqlQuery)}&fields=status,assignee,reporter,created&maxResults=${maxResults}`;
+            if (nextPageToken) url += `&nextPageToken=${nextPageToken}`;
+            let searchResponse = await fetch(url);
             searchResults = await searchResponse.json();
-
+            nextPageToken = searchResults.nextPageToken;
             releasedIssues = releasedIssues.concat(searchResults.issues || []);
             startAt += maxResults;
-        } while (searchResults.total > releasedIssues.length);
+        } while (searchResults.isLast == false);
 
         releasedIssues.forEach(issue => {
             const status = issue.fields.status.name.toLowerCase();
@@ -60,15 +61,17 @@
 
         // Fetch Created Tasks (Excluding Fix Version)
         startAt = 0;
+        const jqlQuery = `project=${projectKey} AND created >= ${startOfMonth} AND created < ${startOfNextMonth}`;
+        url = `/rest/api/3/search/jql?jql=${encodeURIComponent(jqlQuery)}&fields=reporter,fixVersions,assignee&maxResults=${maxResults}`;
         let createdIssues = [];
         do {
-            const jqlQuery = `project=${projectKey} AND created >= ${startOfMonth} AND created < ${startOfNextMonth}`;
-            const searchResponse = await fetch(`/rest/api/3/search?jql=${encodeURIComponent(jqlQuery)}&fields=reporter,fixVersions,assignee&startAt=${startAt}&maxResults=${maxResults}`);
+            if (nextPageToken) url += `&nextPageToken=${nextPageToken}`;
+            const searchResponse = await fetch(url);
             searchResults = await searchResponse.json();
-
+            nextPageToken = searchResults.nextPageToken;
             createdIssues = createdIssues.concat(searchResults.issues || []);
             startAt += maxResults;
-        } while (searchResults.total > createdIssues.length);
+        } while (searchResults.isLast == false);
 
         totalCreated = createdIssues.length;
 
@@ -80,14 +83,16 @@
         // Fetch Unique Tasks (Created in Month AND Has Fix Version)
         startAt = 0;
         let uniqueIssues = [];
+        const jqlQueryuniq = `fixVersion=${version.id} AND project=${projectKey} AND created >= ${startOfMonth} AND created < ${startOfNextMonth}`;
+        url = `/rest/api/3/search/jql?jql=${encodeURIComponent(jqlQueryuniq)}&fields=assignee,reporter&startAt=${startAt}&maxResults=${maxResults}`;
         do {
-            const jqlQuery = `fixVersion=${version.id} AND project=${projectKey} AND created >= ${startOfMonth} AND created < ${startOfNextMonth}`;
-            const searchResponse = await fetch(`/rest/api/3/search?jql=${encodeURIComponent(jqlQuery)}&fields=assignee,reporter&startAt=${startAt}&maxResults=${maxResults}`);
+            if (nextPageToken) url += `&nextPageToken=${nextPageToken}`;
+            const searchResponse = await fetch(url);
             searchResults = await searchResponse.json();
-
+            nextPageToken = searchResults.nextPageToken;
             uniqueIssues = uniqueIssues.concat(searchResults.issues || []);
             startAt += maxResults;
-        } while (searchResults.total > uniqueIssues.length);
+        } while (searchResults.isLast == false);
 
         totalUniqueTasks = uniqueIssues.length;
 
